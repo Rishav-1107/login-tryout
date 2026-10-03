@@ -2,7 +2,6 @@
 #include <fstream>
 #include <string>
 #include <cctype>
-
 using namespace std;
 
 // Function declarations
@@ -14,7 +13,7 @@ bool login();
 
 bool validUsername(string username);
 bool validPassword(string password);
-
+bool usernameExists(string username); // for checking duplicate usernames;
 // ======================================================
 // CENTER TEXT FUNCTION
 // ======================================================
@@ -31,6 +30,46 @@ void centerText(string text)
     cout << string(spaces, ' ') << text << endl;
 }
 
+
+bool validUsername(string username) // for username validation;---------------------
+{
+    if (username.length() < 5)
+        return false;
+
+    for (int i = 0; i < username.length(); i++)
+    {
+        if (!isalnum(username[i]) && username[i] != '_')
+            return false;
+    }
+
+    return true;
+}
+
+
+bool validPassword(string password) // for password validation --------------------------
+{
+    bool upper = false;
+    bool lower = false;
+    bool digit = false;
+    bool special = false;
+
+    if (password.length() < 8)
+        return false;
+
+    for (int i = 0; i < password.length(); i++)
+    {
+        if (isupper(password[i]))
+            upper = true;
+        else if (islower(password[i]))
+            lower = true;
+        else if (isdigit(password[i]))
+            digit = true;
+        else
+            special = true;
+    }
+
+    return upper && lower && digit && special;
+}
 
 // ======================================================
 // LINE FUNCTION
@@ -158,6 +197,30 @@ void viewCourse()
 // ======================================================
 // STUDENT SIGNUP
 // ======================================================
+bool usernameExists(string username)
+{
+    string savedUsername;
+    string savedPassword;
+
+    ifstream file("students.txt");
+
+    if (!file.is_open())
+    {
+        return false;
+    }
+
+    while (file >> savedUsername >> savedPassword)
+    {
+        if (username == savedUsername)
+        {
+            file.close();
+            return true;
+        }
+    }
+
+    file.close();
+    return false;
+}
 
 void signUp()
 {
@@ -169,7 +232,7 @@ void signUp()
     centerText("STUDENT SIGNUP");
     line();
 
-    // Username validation
+    // Username validation--------------------------
     do
     {
         cout << "\n\t\tCreate Username: ";
@@ -177,15 +240,20 @@ void signUp()
 
         if (!validUsername(username))
         {
-            cout << "\n\t\tUsername must:\n";
-            cout << "\t\t- Be at least 5 characters\n";
-            cout << "\t\t- Contain only letters, numbers or _\n";
+            cout << "\n\t\tInvalid username!";
+            cout << "\n\t\tUsername must contain at least 5 characters";
+            cout << "\n\t\tand only letters, numbers or underscore.\n";
+        }
+        else if (usernameExists(username))
+        {
+            cout << "\n\t\tUsername already exists!";
+            cout << "\n\t\tPlease choose another username.\n";
         }
 
-    } while (!validUsername(username));
+    } while (!validUsername(username) || usernameExists(username));
 
 
-    // Password validation
+    // Password validation------------------------
     do
     {
         cout << "\n\t\tCreate Password: ";
@@ -193,18 +261,15 @@ void signUp()
 
         if (!validPassword(password))
         {
-            cout << "\n\t\tPassword must:\n";
-            cout << "\t\t- Be at least 8 characters\n";
-            cout << "\t\t- Contain an uppercase letter\n";
-            cout << "\t\t- Contain a lowercase letter\n";
-            cout << "\t\t- Contain a number\n";
-            cout << "\t\t- Contain a special character\n";
+            cout << "\n\t\tInvalid password!";
+            cout << "\n\t\tPassword must contain at least 8 characters,";
+            cout << "\n\t\tuppercase, lowercase, number and special character.\n";
         }
 
     } while (!validPassword(password));
 
 
-    // Save username and password
+    // Save account
     ofstream file("students.txt", ios::app);
 
     if (file.is_open())
@@ -222,7 +287,6 @@ void signUp()
         centerText("Error opening file!");
     }
 }
-
 
 // ======================================================
 // STUDENT LOGIN
@@ -394,10 +458,9 @@ void adminLogin()
 int main()
 {
     int choice;
-    int count = 0;
     int attempts = 3;
 
-    while (count < 3)
+    while (attempts > 0)
     {
         cout << endl;
         line();
@@ -437,8 +500,7 @@ int main()
 
 
             default:
-                count++;
-
+            	
                 cout << "\n\t\tAttempts left: " << attempts - 1 << endl;
                 centerText("Invalid choice. Please try again.");
 
